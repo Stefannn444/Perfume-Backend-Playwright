@@ -19,6 +19,7 @@ function parseVivantis(query, browser) {
         const encodedQuery = encodeURIComponent(query);
         yield page.goto(`https://www.vivantis.ro/fulltext/?q=${encodedQuery}`, { waitUntil: 'domcontentloaded' });
         yield page.waitForLoadState('networkidle');
+        page.setDefaultTimeout(5000);
         yield page.screenshot({ path: 'vivantis1.png', fullPage: true });
         yield page.mouse.wheel(0, 100);
         try {

@@ -9,6 +9,9 @@ export async function parseVivantis(query:string,browser:BrowserContext){
     await page.goto(`https://www.vivantis.ro/fulltext/?q=${encodedQuery}`,{waitUntil:'domcontentloaded'})
     await page.waitForLoadState('networkidle')
 
+    page.setDefaultTimeout(5000)
+
+
     await page.screenshot({path:'vivantis1.png',fullPage:true})
     await page.mouse.wheel(0,100)
 

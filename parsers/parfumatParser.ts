@@ -8,6 +8,8 @@ export async function parseParfumat(query:string,browser:BrowserContext) {
     const encodedQuery=encodeURIComponent(query);
     await page.goto(`https://parfumat.ro/#0641/fullscreen/m=and&q=${encodedQuery}`)
 
+    page.setDefaultTimeout(5000)
+
     try{
         await page.locator('button.cookiesplus-btn.cookiesplus-accept').first().click({timeout:2000})
     }catch(e){

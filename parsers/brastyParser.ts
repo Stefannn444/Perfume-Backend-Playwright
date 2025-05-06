@@ -1,22 +1,17 @@
-import {BrowserContext} from 'playwright'
+import {BrowserContext} from "playwright";
 import {Product, romanianToPrice} from "../models/Product";
 
-export async function parseMM(query:string,browser:BrowserContext) {
+//TODO: format producturl?
 
-
+export async function parseBrasty(query:string,browser:BrowserContext){
     const page = await browser.newPage();
 
     const encodedQuery = encodeURIComponent(query);
-    await page.goto(`https://mmparfumuri.ro/index.php?route=product/search&sort=p.price&order=ASC&search=${encodedQuery}&description=true`, {waitUntil: 'networkidle'})
-    await page.screenshot({path: 'mmparfumuri.png', fullPage: true})
-
+    await page.goto(`https://www.brasty.ro/produsele?q=${encodedQuery}`, {waitUntil: 'networkidle'})
     page.setDefaultTimeout(5000)
 
+    const productElements = await page.locator('.c-productbox.js-paging-item')
 
-    const productElements = await page.locator('.product-thumb')
-
-    ///////filtering//////
-    //count?
     const count=await productElements.count()
     const limit=Math.min(count,5)
     const matchingProducts=[]
@@ -25,7 +20,7 @@ export async function parseMM(query:string,browser:BrowserContext) {
     for(let i=0;i<limit;i++){
         const productElement=productElements.nth(i)
         try{
-            const productName=await productElement.locator('.name').textContent()
+            const productName=await productElement.locator('.c-productbox__title').textContent()
             console.log(productName)
             const matches= queryWords.every(word=>
                 productName!.toLowerCase().includes(word.toLowerCase())
@@ -43,21 +38,19 @@ export async function parseMM(query:string,browser:BrowserContext) {
     for(let i=0; i<matchingProducts.length; i++){
         try{
             const productElement=matchingProducts[i]
-            const productName=await productElement.locator('.name').textContent()
-            const productPrice= romanianToPrice(await productElement.locator('.price').textContent() as string)
-            const productImage = await productElement.locator('.image img').first().getAttribute('src')
-            const productUrl = await productElement.locator('.image a').getAttribute('href')
+            const productName=await productElement.locator('.c-productbox__title').textContent()
+            const productPrice= romanianToPrice(await productElement.locator('.c-productbox__price').textContent() as string)
+            const productImage = await productElement.locator('.c-productbox__picture img').first().getAttribute('src')
+            const productUrl = 'https://www.brasty.ro'+await productElement.locator('.c-productbox__title a').getAttribute('href')
 
             finalProducts.push(new Product(productName,productPrice,productImage,productUrl))
         }catch(err){
-            console.log('ERROR PARSING PRODUT',err)
+            console.log('Error parsing BRASTY product',err)
         }
     }
-
-
-    console.log('Page loaded')
 
     console.log(finalProducts)
     await page.close()
     return finalProducts
+
 }

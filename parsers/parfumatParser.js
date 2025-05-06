@@ -16,6 +16,7 @@ function parseParfumat(query, browser) {
         const page = yield browser.newPage();
         const encodedQuery = encodeURIComponent(query);
         yield page.goto(`https://parfumat.ro/#0641/fullscreen/m=and&q=${encodedQuery}`);
+        page.setDefaultTimeout(5000);
         try {
             yield page.locator('button.cookiesplus-btn.cookiesplus-accept').first().click({ timeout: 2000 });
         }

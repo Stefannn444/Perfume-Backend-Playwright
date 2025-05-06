@@ -1,10 +1,12 @@
 import express,{ Request, Response } from 'express';
 import {Browser} from 'playwright';
 import { chromium } from 'playwright-extra';
+import {parseBrasty} from "./parsers/brastyParser";
 import { parseMM } from './parsers/mmParfumuriParser';
 import {parseParfumat} from "./parsers/parfumatParser";
 import { parseVivantis } from './parsers/vivantisParser';
 import stealth from 'puppeteer-extra-plugin-stealth';
+import {Product} from "./models/Product";
 
 chromium.use(stealth())
 
@@ -29,7 +31,15 @@ app.get('/search',async(req:Request,res:Response):Promise<void>=>{
     }
     try{
         const browser=await browserPromise
-        const [resultsMM, resultsParfumat, resultsVivantis] = await Promise.all([
+        const [resultsBrasty,resultsMM, resultsParfumat, resultsVivantis] = await Promise.all([
+            (async()=>{
+                const contextBrasty=await browser.newContext();
+                try{
+                    return await parseBrasty(query,contextBrasty);
+                }finally{
+                    await contextBrasty.close()
+                }
+            })(),
             (async () => {
                 const contextMM = await browser.newContext();
                 try {
@@ -57,20 +67,30 @@ app.get('/search',async(req:Request,res:Response):Promise<void>=>{
                 }
             })(),
         ]);
-        const results = [...resultsMM, ...resultsParfumat, ...resultsVivantis];
+        const results = [...resultsBrasty,...resultsMM, ...resultsParfumat, ...resultsVivantis];
 
-        /*const resultsParfumat= await Promise.all([
+        /*const resultsBrasty= await Promise.all([
             (async()=>{
-                const contextParfumat=await browser.newContext();
+                const contextBrasty=await browser.newContext();
                 try{
-                    return await parseParfumat(query,contextParfumat);
+                    return await parseBrasty(query,contextBrasty);
                 }finally{
-                    await contextParfumat.close()
+                    await contextBrasty.close()
                 }
             })(),
-        ])
-        const results=[...resultsParfumat]*/
-        res.json(results);
+        ])*/
+        //const results=[...resultsBrasty]
+        //res.json(resultsBrasty)
+        //TODO: fix error 500 problems that arise due to the server's network's deficiencies
+        //TODO: test null results
+        //TODO: tinker with the general page timeout: change it to browsercontext or above?
+        //TODO: quicker timeout for all awaits
+        //TODO: consider whether it's worth keeping networkidle wait condition in all sites
+        res.json(results.sort((a:Product,b:Product)=>{
+            const priceA = a.price === null ? Infinity : a.price;
+            const priceB = b.price === null ? Infinity : b.price;
+            return priceA - priceB;
+        }));
     }catch(err){
         console.error("Error in parse:",err)
         res.status(500).json({error:'Internal server error'})

@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const playwright_extra_1 = require("playwright-extra");
+const brastyParser_1 = require("./parsers/brastyParser");
 const mmParfumuriParser_1 = require("./parsers/mmParfumuriParser");
 const parfumatParser_1 = require("./parsers/parfumatParser");
 const vivantisParser_1 = require("./parsers/vivantisParser");
@@ -38,7 +39,16 @@ app.get('/search', (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
     try {
         const browser = yield browserPromise;
-        const [resultsMM, resultsParfumat, resultsVivantis] = yield Promise.all([
+        const [resultsBrasty, resultsMM, resultsParfumat, resultsVivantis] = yield Promise.all([
+            (() => __awaiter(void 0, void 0, void 0, function* () {
+                const contextBrasty = yield browser.newContext();
+                try {
+                    return yield (0, brastyParser_1.parseBrasty)(query, contextBrasty);
+                }
+                finally {
+                    yield contextBrasty.close();
+                }
+            }))(),
             (() => __awaiter(void 0, void 0, void 0, function* () {
                 const contextMM = yield browser.newContext();
                 try {
@@ -68,19 +78,29 @@ app.get('/search', (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 }
             }))(),
         ]);
-        const results = [...resultsMM, ...resultsParfumat, ...resultsVivantis];
-        /*const resultsParfumat= await Promise.all([
+        const results = [...resultsBrasty, ...resultsMM, ...resultsParfumat, ...resultsVivantis];
+        /*const resultsBrasty= await Promise.all([
             (async()=>{
-                const contextParfumat=await browser.newContext();
+                const contextBrasty=await browser.newContext();
                 try{
-                    return await parseParfumat(query,contextParfumat);
+                    return await parseBrasty(query,contextBrasty);
                 }finally{
-                    await contextParfumat.close()
+                    await contextBrasty.close()
                 }
             })(),
-        ])
-        const results=[...resultsParfumat]*/
-        res.json(results);
+        ])*/
+        //const results=[...resultsBrasty]
+        //res.json(resultsBrasty)
+        //TODO: fix error 500 problems that arise due to the server's network's deficiencies
+        //TODO: test null results
+        //TODO: tinker with the general page timeout: change it to browsercontext or above?
+        //TODO: quicker timeout for all awaits
+        //TODO: consider whether it's worth keeping networkidle wait condition in all sites
+        res.json(results.sort((a, b) => {
+            const priceA = a.price === null ? Infinity : a.price;
+            const priceB = b.price === null ? Infinity : b.price;
+            return priceA - priceB;
+        }));
     }
     catch (err) {
         console.error("Error in parse:", err);
