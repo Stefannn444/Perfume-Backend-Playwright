@@ -19,6 +19,7 @@ const mmParfumuriParser_1 = require("./parsers/mmParfumuriParser");
 const parfumatParser_1 = require("./parsers/parfumatParser");
 const vivantisParser_1 = require("./parsers/vivantisParser");
 const puppeteer_extra_plugin_stealth_1 = __importDefault(require("puppeteer-extra-plugin-stealth"));
+const notinoParser_1 = require("./parsers/notinoParser");
 playwright_extra_1.chromium.use((0, puppeteer_extra_plugin_stealth_1.default)());
 const app = (0, express_1.default)();
 const port = 3000;
@@ -39,7 +40,7 @@ app.get('/search', (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
     try {
         const browser = yield browserPromise;
-        const [resultsBrasty, resultsMM, resultsParfumat, resultsVivantis] = yield Promise.all([
+        const [resultsBrasty, resultsMM, resultsNotino, resultsParfumat, resultsVivantis] = yield Promise.all([
             (() => __awaiter(void 0, void 0, void 0, function* () {
                 const contextBrasty = yield browser.newContext();
                 try {
@@ -56,6 +57,15 @@ app.get('/search', (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 }
                 finally {
                     yield contextMM.close();
+                }
+            }))(),
+            (() => __awaiter(void 0, void 0, void 0, function* () {
+                const contextNotino = yield browser.newContext();
+                try {
+                    return yield (0, notinoParser_1.parseNotino)(query, contextNotino);
+                }
+                finally {
+                    yield contextNotino.close();
                 }
             }))(),
             (() => __awaiter(void 0, void 0, void 0, function* () {
@@ -78,21 +88,16 @@ app.get('/search', (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 }
             }))(),
         ]);
-        const results = [...resultsBrasty, ...resultsMM, ...resultsParfumat, ...resultsVivantis];
-        /*const resultsBrasty= await Promise.all([
-            (async()=>{
-                const contextBrasty=await browser.newContext();
-                try{
-                    return await parseBrasty(query,contextBrasty);
-                }finally{
-                    await contextBrasty.close()
-                }
-            })(),
-        ])*/
-        //const results=[...resultsBrasty]
-        //res.json(resultsBrasty)
+        const results = [...resultsBrasty, ...resultsMM, ...resultsNotino, ...resultsParfumat, ...resultsVivantis];
+        //TODO: check whether id-based searches are required for dynamically created class names
         //TODO: fix error 500 problems that arise due to the server's network's deficiencies
         //TODO: test null results
+        //TODO: full ts
+        //todo: IF LIMIT <1
+        //TODO: erase screenshots
+        //TODO: more query separators ' `?
+        //TODO: variable name consistency, err - e
+        //TODO: consistency in brand+productName retrieval
         //TODO: tinker with the general page timeout: change it to browsercontext or above?
         //TODO: quicker timeout for all awaits
         //TODO: consider whether it's worth keeping networkidle wait condition in all sites

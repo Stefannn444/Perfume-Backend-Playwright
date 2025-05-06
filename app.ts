@@ -7,6 +7,7 @@ import {parseParfumat} from "./parsers/parfumatParser";
 import { parseVivantis } from './parsers/vivantisParser';
 import stealth from 'puppeteer-extra-plugin-stealth';
 import {Product} from "./models/Product";
+import {parseNotino} from "./parsers/notinoParser";
 
 chromium.use(stealth())
 
@@ -31,7 +32,7 @@ app.get('/search',async(req:Request,res:Response):Promise<void>=>{
     }
     try{
         const browser=await browserPromise
-        const [resultsBrasty,resultsMM, resultsParfumat, resultsVivantis] = await Promise.all([
+        const [resultsBrasty,resultsMM, resultsNotino, resultsParfumat, resultsVivantis] = await Promise.all([
             (async()=>{
                 const contextBrasty=await browser.newContext();
                 try{
@@ -46,6 +47,14 @@ app.get('/search',async(req:Request,res:Response):Promise<void>=>{
                     return await parseMM(query, contextMM);
                 } finally {
                     await contextMM.close();
+                }
+            })(),
+            (async()=>{
+                const contextNotino=await browser.newContext();
+                try{
+                    return await parseNotino(query,contextNotino);
+                }finally{
+                    await contextNotino.close();
                 }
             })(),
             (async()=>{
@@ -67,25 +76,21 @@ app.get('/search',async(req:Request,res:Response):Promise<void>=>{
                 }
             })(),
         ]);
-        const results = [...resultsBrasty,...resultsMM, ...resultsParfumat, ...resultsVivantis];
+        const results = [...resultsBrasty,...resultsMM, ...resultsNotino, ...resultsParfumat, ...resultsVivantis];
 
-        /*const resultsBrasty= await Promise.all([
-            (async()=>{
-                const contextBrasty=await browser.newContext();
-                try{
-                    return await parseBrasty(query,contextBrasty);
-                }finally{
-                    await contextBrasty.close()
-                }
-            })(),
-        ])*/
-        //const results=[...resultsBrasty]
-        //res.json(resultsBrasty)
+        //TODO: check whether id-based searches are required for dynamically created class names
         //TODO: fix error 500 problems that arise due to the server's network's deficiencies
         //TODO: test null results
+        //TODO: full ts
+        //todo: IF LIMIT <1
+        //TODO: erase screenshots
+        //TODO: more query separators ' `?
+        //TODO: variable name consistency, err - e
+        //TODO: consistency in brand+productName retrieval
         //TODO: tinker with the general page timeout: change it to browsercontext or above?
         //TODO: quicker timeout for all awaits
         //TODO: consider whether it's worth keeping networkidle wait condition in all sites
+
         res.json(results.sort((a:Product,b:Product)=>{
             const priceA = a.price === null ? Infinity : a.price;
             const priceB = b.price === null ? Infinity : b.price;
