@@ -14,8 +14,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const playwright_extra_1 = require("playwright-extra");
-const vivantisParser_1 = require("./parsers/vivantisParser");
 const mmParfumuriParser_1 = require("./parsers/mmParfumuriParser");
+const parfumatParser_1 = require("./parsers/parfumatParser");
+const vivantisParser_1 = require("./parsers/vivantisParser");
 const puppeteer_extra_plugin_stealth_1 = __importDefault(require("puppeteer-extra-plugin-stealth"));
 playwright_extra_1.chromium.use((0, puppeteer_extra_plugin_stealth_1.default)());
 const app = (0, express_1.default)();
@@ -37,7 +38,7 @@ app.get('/search', (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
     try {
         const browser = yield browserPromise;
-        const [resultsMM, resultsVivantis] = yield Promise.all([
+        const [resultsMM, resultsParfumat, resultsVivantis] = yield Promise.all([
             (() => __awaiter(void 0, void 0, void 0, function* () {
                 const contextMM = yield browser.newContext();
                 try {
@@ -48,7 +49,17 @@ app.get('/search', (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 }
             }))(),
             (() => __awaiter(void 0, void 0, void 0, function* () {
+                const contextParfumat = yield browser.newContext();
+                try {
+                    return yield (0, parfumatParser_1.parseParfumat)(query, contextParfumat);
+                }
+                finally {
+                    yield contextParfumat.close();
+                }
+            }))(),
+            (() => __awaiter(void 0, void 0, void 0, function* () {
                 const contextVivantis = yield browser.newContext();
+                yield new Promise(resolve => setTimeout(resolve, 1500));
                 try {
                     return yield (0, vivantisParser_1.parseVivantis)(query, contextVivantis);
                 }
@@ -57,7 +68,18 @@ app.get('/search', (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 }
             }))(),
         ]);
-        const results = [...resultsMM, ...resultsVivantis];
+        const results = [...resultsMM, ...resultsParfumat, ...resultsVivantis];
+        /*const resultsParfumat= await Promise.all([
+            (async()=>{
+                const contextParfumat=await browser.newContext();
+                try{
+                    return await parseParfumat(query,contextParfumat);
+                }finally{
+                    await contextParfumat.close()
+                }
+            })(),
+        ])
+        const results=[...resultsParfumat]*/
         res.json(results);
     }
     catch (err) {

@@ -1,4 +1,5 @@
 import {BrowserContext} from "playwright";
+import {Product, romanianToPrice} from "../models/Product";
 //TODO: add cookies in the browsercontext
 //TODO: add support for both ` and '
 export async function parseVivantis(query:string,browser:BrowserContext){
@@ -13,7 +14,7 @@ export async function parseVivantis(query:string,browser:BrowserContext){
 
     try{
         await page.waitForTimeout(1000)
-        await page.locator('button.base-button.button.primary.medium.mt-1.mt-md-0.bg-success').click()
+        await page.locator('button.base-button.button.primary.medium.mt-1.mt-md-0.bg-success').click({timeout:2000})
     }catch(e){
         console.log(e)
     }
@@ -52,13 +53,13 @@ export async function parseVivantis(query:string,browser:BrowserContext){
         try{
             const productElement=matchingProducts[i]
             const productName=await productElement.locator('.product-name').textContent()
-            const productPrice= await productElement.locator('.price-actual').textContent()
+            const productPrice= romanianToPrice( await productElement.locator('.price-actual').textContent() as string);
             //first?
             const productImage = await productElement.locator('.product-image img').first().getAttribute('src')
             const productUrl = 'https://www.vivantis.ro'+await productElement.locator('.text-link').first().getAttribute('href')
-            finalProducts.push({productName,productPrice,productImage,productUrl})
+            finalProducts.push(new Product(productName,productPrice,productImage,productUrl))
         }catch(err){
-            console.log('VIVANTIS parse error',err)
+            console.log('Error parsing VIVANTIS product',err)
         }
     }
 

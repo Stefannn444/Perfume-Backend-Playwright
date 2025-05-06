@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.parseVivantis = parseVivantis;
+const Product_1 = require("../models/Product");
 //TODO: add cookies in the browsercontext
 //TODO: add support for both ` and '
 function parseVivantis(query, browser) {
@@ -22,7 +23,7 @@ function parseVivantis(query, browser) {
         yield page.mouse.wheel(0, 100);
         try {
             yield page.waitForTimeout(1000);
-            yield page.locator('button.base-button.button.primary.medium.mt-1.mt-md-0.bg-success').click();
+            yield page.locator('button.base-button.button.primary.medium.mt-1.mt-md-0.bg-success').click({ timeout: 2000 });
         }
         catch (e) {
             console.log(e);
@@ -55,14 +56,14 @@ function parseVivantis(query, browser) {
             try {
                 const productElement = matchingProducts[i];
                 const productName = yield productElement.locator('.product-name').textContent();
-                const productPrice = yield productElement.locator('.price-actual').textContent();
+                const productPrice = (0, Product_1.romanianToPrice)(yield productElement.locator('.price-actual').textContent());
                 //first?
                 const productImage = yield productElement.locator('.product-image img').first().getAttribute('src');
                 const productUrl = 'https://www.vivantis.ro' + (yield productElement.locator('.text-link').first().getAttribute('href'));
-                finalProducts.push({ productName, productPrice, productImage, productUrl });
+                finalProducts.push(new Product_1.Product(productName, productPrice, productImage, productUrl));
             }
             catch (err) {
-                console.log('VIVANTIS parse error', err);
+                console.log('Error parsing VIVANTIS product', err);
             }
         }
         console.log(finalProducts);

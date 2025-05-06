@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.parseMM = parseMM;
+const Product_1 = require("../models/Product");
 function parseMM(query, browser) {
     return __awaiter(this, void 0, void 0, function* () {
         const page = yield browser.newPage();
@@ -42,10 +43,10 @@ function parseMM(query, browser) {
             try {
                 const productElement = matchingProducts[i];
                 const productName = yield productElement.locator('.name').textContent();
-                const productPrice = yield productElement.locator('.price').textContent();
+                const productPrice = (0, Product_1.romanianToPrice)(yield productElement.locator('.price').textContent());
                 const productImage = yield productElement.locator('.image img').first().getAttribute('src');
                 const productUrl = yield productElement.locator('.image a').getAttribute('href');
-                finalProducts.push({ productName, productPrice, productImage, productUrl });
+                finalProducts.push(new Product_1.Product(productName, productPrice, productImage, productUrl));
             }
             catch (err) {
                 console.log('ERROR PARSING PRODUT', err);

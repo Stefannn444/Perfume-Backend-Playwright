@@ -1,8 +1,9 @@
 import express,{ Request, Response } from 'express';
 import {Browser} from 'playwright';
 import { chromium } from 'playwright-extra';
-import { parseVivantis } from './parsers/vivantisParser';
 import { parseMM } from './parsers/mmParfumuriParser';
+import {parseParfumat} from "./parsers/parfumatParser";
+import { parseVivantis } from './parsers/vivantisParser';
 import stealth from 'puppeteer-extra-plugin-stealth';
 
 chromium.use(stealth())
@@ -28,7 +29,7 @@ app.get('/search',async(req:Request,res:Response):Promise<void>=>{
     }
     try{
         const browser=await browserPromise
-        const [resultsMM, resultsVivantis] = await Promise.all([
+        const [resultsMM, resultsParfumat, resultsVivantis] = await Promise.all([
             (async () => {
                 const contextMM = await browser.newContext();
                 try {
@@ -37,8 +38,18 @@ app.get('/search',async(req:Request,res:Response):Promise<void>=>{
                     await contextMM.close();
                 }
             })(),
+            (async()=>{
+                const contextParfumat = await browser.newContext();
+                try{
+                    return await parseParfumat(query,contextParfumat);
+                }finally{
+                    await contextParfumat.close();
+                }
+            })(),
             (async () => {
                 const contextVivantis = await browser.newContext();
+                await new Promise(resolve => setTimeout(resolve, 1500));
+
                 try {
                     return await parseVivantis(query, contextVivantis);
                 } finally {
@@ -46,7 +57,19 @@ app.get('/search',async(req:Request,res:Response):Promise<void>=>{
                 }
             })(),
         ]);
-        const results = [...resultsMM, ...resultsVivantis];
+        const results = [...resultsMM, ...resultsParfumat, ...resultsVivantis];
+
+        /*const resultsParfumat= await Promise.all([
+            (async()=>{
+                const contextParfumat=await browser.newContext();
+                try{
+                    return await parseParfumat(query,contextParfumat);
+                }finally{
+                    await contextParfumat.close()
+                }
+            })(),
+        ])
+        const results=[...resultsParfumat]*/
         res.json(results);
     }catch(err){
         console.error("Error in parse:",err)

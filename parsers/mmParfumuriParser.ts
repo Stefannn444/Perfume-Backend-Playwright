@@ -1,4 +1,5 @@
 import {BrowserContext} from 'playwright'
+import {Product, romanianToPrice} from "../models/Product";
 
 export async function parseMM(query:string,browser:BrowserContext) {
 
@@ -40,11 +41,11 @@ export async function parseMM(query:string,browser:BrowserContext) {
         try{
             const productElement=matchingProducts[i]
             const productName=await productElement.locator('.name').textContent()
-            const productPrice= await productElement.locator('.price').textContent()
+            const productPrice= romanianToPrice(await productElement.locator('.price').textContent() as string)
             const productImage = await productElement.locator('.image img').first().getAttribute('src')
             const productUrl = await productElement.locator('.image a').getAttribute('href')
 
-            finalProducts.push({productName,productPrice,productImage,productUrl})
+            finalProducts.push(new Product(productName,productPrice,productImage,productUrl))
         }catch(err){
             console.log('ERROR PARSING PRODUT',err)
         }
