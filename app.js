@@ -61,6 +61,7 @@ app.get('/search', (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             }))(),
             (() => __awaiter(void 0, void 0, void 0, function* () {
                 const contextNotino = yield browser.newContext();
+                yield new Promise(resolve => setTimeout(resolve, 1000));
                 try {
                     return yield (0, notinoParser_1.parseNotino)(query, contextNotino);
                 }
@@ -89,10 +90,12 @@ app.get('/search', (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             }))(),
         ]);
         const results = [...resultsBrasty, ...resultsMM, ...resultsNotino, ...resultsParfumat, ...resultsVivantis];
+        //TODO: IF i have to wait for networkidle, replace with expect, as tried in the other branch
         //TODO: check whether id-based searches are required for dynamically created class names
         //TODO: fix error 500 problems that arise due to the server's network's deficiencies
         //TODO: test null results
         //TODO: full ts
+        //TODO: remove toLowercase redundancies
         //todo: IF LIMIT <1
         //TODO: erase screenshots
         //TODO: more query separators ' `?
@@ -100,7 +103,6 @@ app.get('/search', (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         //TODO: consistency in brand+productName retrieval
         //TODO: tinker with the general page timeout: change it to browsercontext or above?
         //TODO: quicker timeout for all awaits
-        //TODO: consider whether it's worth keeping networkidle wait condition in all sites
         res.json(results.sort((a, b) => {
             const priceA = a.price === null ? Infinity : a.price;
             const priceB = b.price === null ? Infinity : b.price;

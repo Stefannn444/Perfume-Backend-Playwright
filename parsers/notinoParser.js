@@ -15,7 +15,7 @@ function parseNotino(query, browser) {
     return __awaiter(this, void 0, void 0, function* () {
         const page = yield browser.newPage();
         const encodedQuery = encodeURIComponent(query);
-        yield page.goto(`https://www.notino.ro/search.asp?exps=${encodedQuery}`, { waitUntil: 'networkidle' });
+        yield page.goto(`https://www.notino.ro/search.asp?exps=${encodedQuery}`, { waitUntil: 'domcontentloaded' });
         yield page.screenshot({ path: 'notino1.png', fullPage: true });
         page.setDefaultTimeout(5000);
         const productElements = yield page.locator('.pt828i9');

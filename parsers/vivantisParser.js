@@ -18,9 +18,9 @@ function parseVivantis(query, browser) {
         const page = yield browser.newPage();
         const encodedQuery = encodeURIComponent(query);
         yield page.goto(`https://www.vivantis.ro/fulltext/?q=${encodedQuery}`, { waitUntil: 'domcontentloaded' });
-        yield page.waitForLoadState('networkidle');
+        //await page.waitForLoadState('networkidle')
         page.setDefaultTimeout(5000);
-        yield page.screenshot({ path: 'vivantis1.png', fullPage: true });
+        //await page.screenshot({path:'vivantis1.png',fullPage:true})
         yield page.mouse.wheel(0, 100);
         try {
             yield page.waitForTimeout(1000);
@@ -29,7 +29,7 @@ function parseVivantis(query, browser) {
         catch (e) {
             console.log(e);
         }
-        yield page.screenshot({ path: 'vivantis2.png', fullPage: true });
+        //await page.screenshot({path:'vivantis2.png',fullPage:true})
         //await page.waitForLoadState('networkidle')
         //await page.waitForEvent('domcontentloaded');
         const productElements = yield page.locator('.product-card');

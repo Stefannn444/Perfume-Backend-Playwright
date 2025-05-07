@@ -5,7 +5,7 @@ export async function parseNotino(query:string, browser:BrowserContext){
     const page=await browser.newPage();
 
     const encodedQuery=encodeURIComponent(query);
-    await page.goto(`https://www.notino.ro/search.asp?exps=${encodedQuery}`,{waitUntil:'networkidle'});
+    await page.goto(`https://www.notino.ro/search.asp?exps=${encodedQuery}`,{waitUntil:'domcontentloaded'});
     await page.screenshot({path: 'notino1.png', fullPage: true})
 
     page.setDefaultTimeout(5000);

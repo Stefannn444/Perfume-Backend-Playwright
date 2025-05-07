@@ -7,12 +7,12 @@ export async function parseVivantis(query:string,browser:BrowserContext){
 
     const encodedQuery=encodeURIComponent(query)
     await page.goto(`https://www.vivantis.ro/fulltext/?q=${encodedQuery}`,{waitUntil:'domcontentloaded'})
-    await page.waitForLoadState('networkidle')
+    //await page.waitForLoadState('networkidle')
 
     page.setDefaultTimeout(5000)
 
 
-    await page.screenshot({path:'vivantis1.png',fullPage:true})
+    //await page.screenshot({path:'vivantis1.png',fullPage:true})
     await page.mouse.wheel(0,100)
 
     try{
@@ -22,7 +22,7 @@ export async function parseVivantis(query:string,browser:BrowserContext){
         console.log(e)
     }
 
-    await page.screenshot({path:'vivantis2.png',fullPage:true})
+    //await page.screenshot({path:'vivantis2.png',fullPage:true})
     //await page.waitForLoadState('networkidle')
     //await page.waitForEvent('domcontentloaded');
 
